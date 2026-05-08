@@ -33,7 +33,7 @@ export default function CartFulfilmentBlock({ onCartUpdate }: CartFulfilmentBloc
   const mode = useSyncExternalStore(
     subscribeStoreFulfilmentMode,
     getStoreFulfilmentMode,
-    () => 'delivery',
+    (): StoreFulfilmentMode => 'delivery',
   )
 
   useEffect(() => {
