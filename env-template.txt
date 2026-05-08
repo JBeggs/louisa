@@ -1,0 +1,13 @@
+# Louisa — Environment template
+
+Copy to `.env.local` and adjust.
+
+# API
+NEXT_PUBLIC_API_URL=https://your-api.example.com/api
+NEXT_PUBLIC_COMPANY_SLUG=louisa
+
+# Canonical site URL (no trailing slash) — OG / previews
+NEXT_PUBLIC_SITE_URL=https://your-louisa-site.example.com
+
+# Optional: OG proxy User-Agent (defaults to `${NEXT_PUBLIC_COMPANY_SLUG}-OgProxy/1.0`)
+# OG_PROXY_USER_AGENT=MyStore-OgProxy/1.0
