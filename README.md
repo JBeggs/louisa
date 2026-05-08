@@ -8,7 +8,7 @@ Multi-tenant Next.js storefront for South African comfort-food businesses (vetko
 
 ## Themes
 
-Runtime themes (no reload): **Sunday Lunch** (default), **Township Diner**, **Modern Plate** — cookie `site_theme`.
+Runtime themes (no reload): **Lavender** (default), **Midnight**, **Sage** — cookie `site_theme` (internal IDs unchanged).
 
 ## Pickup + delivery
 

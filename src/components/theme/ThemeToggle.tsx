@@ -4,9 +4,9 @@ import { useTheme, THEMES, THEME_META, type Theme } from '@/contexts/ThemeContex
 
 /** Primary brand colour per theme — 12px swatch only (hex ok for swatch fill). */
 const SWATCH: Record<Theme, string> = {
-  'sunday-lunch': '#A3622E',
-  'township-diner': '#D32F2F',
-  'modern-plate': '#0F766E',
+  'sunday-lunch': '#7C3AED',
+  'township-diner': '#3B82F6',
+  'modern-plate': '#059669',
 }
 
 interface ThemeToggleProps {

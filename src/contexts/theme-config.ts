@@ -1,7 +1,7 @@
 /**
  * Theme constants safe on server and client.
  *
- * Template 9 (Louisa): Sunday Lunch / Township Diner / Modern Plate — PLAN-09-LOUISA.md.
+ * Template 9 (Louisa): Lavender (light) / Midnight (dark) / Sage (light).
  */
 
 export const THEMES = ['sunday-lunch', 'township-diner', 'modern-plate'] as const
@@ -15,18 +15,18 @@ export const THEME_META: Record<
 > = {
   'sunday-lunch': {
     id: 'sunday-lunch',
-    label: 'Sunday',
-    description: 'Warm cream table, ochre accents',
+    label: 'Lavender',
+    description: 'Pale lilac, violet accent',
   },
   'township-diner': {
     id: 'township-diner',
-    label: 'Diner',
-    description: 'Bold signage red on charcoal',
+    label: 'Midnight',
+    description: 'Navy surface, blue and cyan',
   },
   'modern-plate': {
     id: 'modern-plate',
-    label: 'Bistro',
-    description: 'Clean white, teal accent',
+    label: 'Sage',
+    description: 'Fresh mint, emerald and lime',
   },
 }
 

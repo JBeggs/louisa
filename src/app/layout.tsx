@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import { cookies } from 'next/headers'
-import { Bebas_Neue, DM_Sans, Inter, Playfair_Display } from 'next/font/google'
+import { DM_Sans, Inter, Playfair_Display } from 'next/font/google'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 import './globals.css'
 import { AuthProvider } from '@/contexts/AuthContext'
@@ -22,14 +22,14 @@ import { resolveLocale } from '@/lib/locale'
 
 export const dynamic = 'force-dynamic'
 
-/** Sunday Lunch light bg / Township Diner dark — PLAN-09 */
+/** Lavender light bg / Midnight dark — browser chrome tint */
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover',
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#FFF8EC' },
-    { media: '(prefers-color-scheme: dark)', color: '#1F1410' },
+    { media: '(prefers-color-scheme: light)', color: '#FAF8FF' },
+    { media: '(prefers-color-scheme: dark)', color: '#0F172A' },
   ],
 }
 
@@ -56,7 +56,6 @@ function resolveMetadataBase(): URL | undefined {
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' })
 const playfair = Playfair_Display({ subsets: ['latin'], variable: '--font-playfair', display: 'swap' })
-const bebasNeue = Bebas_Neue({ weight: '400', subsets: ['latin'], variable: '--font-bebas', display: 'swap' })
 const dmSans = DM_Sans({ subsets: ['latin'], variable: '--font-dm-sans', display: 'swap' })
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -116,7 +115,7 @@ export default async function RootLayout({
 }) {
   const [cookieStore, company] = await Promise.all([cookies(), getCompany()])
   const initialTheme = readThemeCookie(cookieStore.get('site_theme')?.value)
-  const fontClassNames = `${inter.variable} ${playfair.variable} ${bebasNeue.variable} ${dmSans.variable}`
+  const fontClassNames = `${inter.variable} ${playfair.variable} ${dmSans.variable}`
 
   return (
     <html
