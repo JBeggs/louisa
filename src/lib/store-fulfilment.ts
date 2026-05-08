@@ -4,6 +4,7 @@
  */
 
 export const LOUISA_FULFILMENT_STORAGE_KEY = 'louisa_fulfilment'
+export const LOUISA_FULFILMENT_CHANGE_EVENT = 'louisa-fulfilment-change'
 export const LOUISA_PICKUP_SLOT_KEY = 'louisa_pickup_slot_iso'
 
 export type StoreFulfilmentMode = 'delivery' | 'collect'
@@ -22,9 +23,18 @@ export function setStoreFulfilmentMode(mode: StoreFulfilmentMode): void {
   if (typeof window === 'undefined') return
   try {
     window.sessionStorage.setItem(LOUISA_FULFILMENT_STORAGE_KEY, mode)
+    window.dispatchEvent(new Event(LOUISA_FULFILMENT_CHANGE_EVENT))
   } catch {
     /* ignore */
   }
+}
+
+/** For `useSyncExternalStore` + same-tab updates after `setStoreFulfilmentMode`. */
+export function subscribeStoreFulfilmentMode(onStoreChange: () => void): () => void {
+  if (typeof window === 'undefined') return () => {}
+  const handler = () => onStoreChange()
+  window.addEventListener(LOUISA_FULFILMENT_CHANGE_EVENT, handler)
+  return () => window.removeEventListener(LOUISA_FULFILMENT_CHANGE_EVENT, handler)
 }
 
 export function getPickupSlotIso(): string {

@@ -1,12 +1,13 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState, useSyncExternalStore } from 'react'
 import { ecommerceApi, newsApi } from '@/lib/api'
 import { useToast } from '@/contexts/ToastContext'
 import FulfilmentMethodRadio from '@/components/checkout/FulfilmentMethodRadio'
 import {
   getStoreFulfilmentMode,
   setStoreFulfilmentMode,
+  subscribeStoreFulfilmentMode,
   type StoreFulfilmentMode,
 } from '@/lib/store-fulfilment'
 import {
@@ -29,13 +30,11 @@ export default function CartFulfilmentBlock({ onCartUpdate }: CartFulfilmentBloc
   const [pickupOffered, setPickupOffered] = useState(false)
   const [pickupLabel, setPickupLabel] = useState('')
   const [deliveryLabel, setDeliveryLabel] = useState('')
-  const [mode, setMode] = useState<StoreFulfilmentMode>('delivery')
-  const [ready, setReady] = useState(false)
-
-  useEffect(() => {
-    setMode(getStoreFulfilmentMode())
-    setReady(true)
-  }, [])
+  const mode = useSyncExternalStore(
+    subscribeStoreFulfilmentMode,
+    getStoreFulfilmentMode,
+    () => 'delivery',
+  )
 
   useEffect(() => {
     let cancelled = false
@@ -59,7 +58,6 @@ export default function CartFulfilmentBlock({ onCartUpdate }: CartFulfilmentBloc
 
   const commitMode = useCallback(
     async (next: StoreFulfilmentMode) => {
-      setMode(next)
       setStoreFulfilmentMode(next)
       try {
         if (next === 'collect') {
@@ -81,7 +79,7 @@ export default function CartFulfilmentBlock({ onCartUpdate }: CartFulfilmentBloc
     [onCartUpdate, showError],
   )
 
-  if (!ready || !pickupOffered) return null
+  if (!pickupOffered) return null
 
   return (
     <FulfilmentMethodRadio

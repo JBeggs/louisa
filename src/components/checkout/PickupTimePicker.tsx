@@ -35,7 +35,7 @@ export default function PickupTimePicker({
     const start = new Date(now.getTime() + lead * 60 * 1000)
     const dayStart = new Date(start)
     dayStart.setHours(0, 0, 0, 0)
-    let t = start.getTime()
+    const t = start.getTime()
     const msWin = win * 60 * 1000
     const offset = Math.ceil((t - dayStart.getTime()) / msWin) * msWin
     let cursor = dayStart.getTime() + offset
