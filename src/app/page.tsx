@@ -1,11 +1,12 @@
 import Link from 'next/link'
-import { ShoppingBag } from 'lucide-react'
+import { ShoppingBag, Package } from 'lucide-react'
 import { serverEcommerceApi } from '@/lib/api-server'
 import { Product } from '@/lib/types'
 import ProductCard from '@/components/products/ProductCard'
 import SafeImage from '@/components/media/SafeImage'
 import { getCompany, type Company } from '@/lib/company'
-import { unwrapEcommerceProductList } from '@/lib/ecommerce-list'
+import { unwrapEcommerceList, unwrapEcommerceProductList } from '@/lib/ecommerce-list'
+import { categoryViewAllHref, homeCategoryProductListParams } from '@/lib/home-category-shelves'
 import PageHero from '@/components/hero/PageHero'
 import { getSiteSetting, coerceSiteString } from '@/lib/site-settings'
 
@@ -31,6 +32,70 @@ async function getFeaturedProducts(): Promise<Product[]> {
     ).slice(0, 8)
   } catch (error) {
     console.error('Error fetching featured products:', error)
+    return []
+  }
+}
+
+/** URL slug when API omits slug (aligned with `/products`). */
+function storefrontCategorySlugFromName(name: string): string {
+  const s = name
+    .trim()
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, '')
+    .replace(/[\s_]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-+|-+$/g, '')
+  return s || 'category'
+}
+
+export type HomeCategoryShelf = {
+  name: string
+  slug: string
+  products: Product[]
+}
+
+async function getHomeCategoryShelves(): Promise<HomeCategoryShelf[]> {
+  try {
+    const catRes: unknown = await serverEcommerceApi.categories.list()
+    const rows = unwrapEcommerceList<{ id: string; name: string; slug?: string | null }>(catRes).filter((c) =>
+      Boolean(c.name?.trim()),
+    )
+    const withSlugs = rows.map((c) => {
+      const raw = c.slug != null ? String(c.slug).trim() : ''
+      const slug = raw || storefrontCategorySlugFromName(c.name)
+      return { name: c.name.trim(), slug }
+    })
+    const sorted = [...withSlugs].sort((a, b) => {
+      const byName = a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
+      if (byName !== 0) return byName
+      return a.slug.localeCompare(b.slug, undefined, { sensitivity: 'base' })
+    })
+    const seen = new Set<string>()
+    const categoryRows = sorted.filter((c) => {
+      const key = c.slug.toLowerCase()
+      if (seen.has(key)) return false
+      seen.add(key)
+      return true
+    })
+
+    const catSettled = await Promise.allSettled(
+      categoryRows.map((c) => serverEcommerceApi.products.list(homeCategoryProductListParams(c.slug))),
+    )
+
+    return categoryRows
+      .map((cat, i) => {
+        const res = catSettled[i]
+        if (res.status !== 'fulfilled') return null
+        const raw = unwrapEcommerceProductList(res.value) as Product[]
+        const products = sortProductsByName(
+          raw.filter((p) => p && typeof p === 'object' && p.status !== 'archived').slice(0, 20),
+        )
+        if (products.length === 0) return null
+        return { name: cat.name, slug: cat.slug, products }
+      })
+      .filter((s): s is HomeCategoryShelf => s != null)
+  } catch (error) {
+    console.error('Error fetching home category shelves:', error)
     return []
   }
 }
@@ -96,14 +161,21 @@ function DefaultHomeHero({
 }
 
 export default async function HomePage() {
-  const [company, featuredProducts, primaryLabelRaw, secondaryLabelRaw, secondaryHrefRaw] =
-    await Promise.all([
-      getCompany(),
-      getFeaturedProducts(),
-      getSiteSetting('home_primary_cta_label'),
-      getSiteSetting('home_secondary_cta_label'),
-      getSiteSetting('home_secondary_cta_href'),
-    ])
+  const [
+    company,
+    featuredProducts,
+    primaryLabelRaw,
+    secondaryLabelRaw,
+    secondaryHrefRaw,
+    categoryShelves,
+  ] = await Promise.all([
+    getCompany(),
+    getFeaturedProducts(),
+    getSiteSetting('home_primary_cta_label'),
+    getSiteSetting('home_secondary_cta_label'),
+    getSiteSetting('home_secondary_cta_href'),
+    getHomeCategoryShelves(),
+  ])
 
   const primaryCtaLabel =
     coerceSiteString(primaryLabelRaw).trim() ||
@@ -125,38 +197,67 @@ export default async function HomePage() {
         }
       />
 
-      <section className="py-16 bg-bg">
-        <div className="container-wide">
-          <div className="section-header">
-            <div>
-              <h2 className="section-title">Featured</h2>
-              <p className="text-text-muted mt-1">Highlighted menu items from your catalog</p>
+      {featuredProducts.length > 0 ? (
+        <section className="py-16 bg-bg">
+          <div className="container-wide">
+            <div className="section-header">
+              <div>
+                <h2 className="section-title">Featured</h2>
+                <p className="text-text-muted mt-1">Highlighted menu items from your catalog</p>
+              </div>
+              <Link href="/products" className="btn btn-secondary">
+                View all
+              </Link>
             </div>
-            <Link href="/products" className="btn btn-secondary">
-              View all
-            </Link>
-          </div>
-
-          {featuredProducts.length > 0 ? (
             <div className="product-grid">
               {featuredProducts.map((product) => (
                 <ProductCard key={product.id} product={product} homeQuickView />
               ))}
             </div>
-          ) : (
-            <div className="text-center py-16 text-text-muted">
-              <ShoppingBag className="w-16 h-16 mx-auto mb-4 opacity-30" />
-              <p className="font-medium text-text">No featured products yet</p>
-              <p className="text-sm mt-2 max-w-md mx-auto">
-                Mark products as featured in admin to show them here.
-              </p>
-              <Link href="/products" className="btn btn-primary mt-6 inline-flex">
-                {primaryCtaLabel}
+          </div>
+        </section>
+      ) : null}
+
+      {categoryShelves.map((shelf, index) => (
+        <section
+          key={shelf.slug}
+          className={`py-16 ${index % 2 === 0 ? 'bg-bg' : 'bg-surface-raised/60'}`}
+        >
+          <div className="container-wide">
+            <div className="section-header">
+              <div>
+                <h2 className="section-title">{shelf.name}</h2>
+                <p className="text-text-muted mt-1">Products in this category</p>
+              </div>
+              <Link href={categoryViewAllHref(shelf.slug)} className="btn btn-secondary">
+                <Package className="w-4 h-4 mr-2" />
+                View All
               </Link>
             </div>
-          )}
-        </div>
-      </section>
+            <div className="product-grid">
+              {shelf.products.map((product) => (
+                <ProductCard key={product.id} product={product} homeQuickView />
+              ))}
+            </div>
+          </div>
+        </section>
+      ))}
+
+      {categoryShelves.length === 0 ? (
+        <section className="py-16 bg-bg">
+          <div className="container-wide text-center text-text-muted">
+            <ShoppingBag className="w-16 h-16 mx-auto mb-4 opacity-30" />
+            <p className="font-medium text-text">No category shelves yet</p>
+            <p className="text-sm mt-2 max-w-md mx-auto">
+              Add categories and active products in the admin — each category with at least one product appears here,
+              alphabetically.
+            </p>
+            <Link href="/products" className="btn btn-primary mt-6 inline-flex">
+              Browse all products
+            </Link>
+          </div>
+        </section>
+      ) : null}
 
       <section className="py-14 bg-surface border-t border-border-default">
         <div className="container-wide text-center">
