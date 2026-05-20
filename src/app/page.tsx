@@ -1,7 +1,13 @@
 import Link from 'next/link'
 import { ShoppingBag, Package } from 'lucide-react'
 import { serverEcommerceApi } from '@/lib/api-server'
-import { Product } from '@/lib/types'
+import { serverNewsApi } from '@/lib/api-server'
+import {
+  filterArticlesByDisplaySettings,
+  getArticleDisplaySettings,
+} from '@/lib/article-display-settings'
+import HomeArticlesSection from '@/components/home/HomeArticlesSection'
+import { Article, Product } from '@/lib/types'
 import ProductCard from '@/components/products/ProductCard'
 import SafeImage from '@/components/media/SafeImage'
 import { getCompany, type Company } from '@/lib/company'
@@ -160,6 +166,20 @@ function DefaultHomeHero({
   )
 }
 
+
+async function getHomeArticles() {
+  const displaySettings = await getArticleDisplaySettings()
+  if (!displaySettings.homeEnabled) return []
+  try {
+    const raw: unknown = await serverNewsApi.articles.list({ status: 'published' })
+    const articles = Array.isArray(raw) ? raw : (raw as { results?: unknown[] })?.results || []
+    return filterArticlesByDisplaySettings(articles as import('@/lib/types').Article[], displaySettings, 'home')
+  } catch (error) {
+    console.error('Error fetching home articles:', error)
+    return []
+  }
+}
+
 export default async function HomePage() {
   const [
     company,
@@ -168,6 +188,7 @@ export default async function HomePage() {
     secondaryLabelRaw,
     secondaryHrefRaw,
     categoryShelves,
+    homeArticles,
   ] = await Promise.all([
     getCompany(),
     getFeaturedProducts(),
@@ -175,6 +196,7 @@ export default async function HomePage() {
     getSiteSetting('home_secondary_cta_label'),
     getSiteSetting('home_secondary_cta_href'),
     getHomeCategoryShelves(),
+    getHomeArticles(),
   ])
 
   const primaryCtaLabel =
@@ -260,6 +282,8 @@ export default async function HomePage() {
           </div>
         </section>
       ) : null}
+
+      <HomeArticlesSection articles={homeArticles} />
 
       <section className="py-14 bg-surface border-t border-border-default">
         <div className="container-wide text-center">
