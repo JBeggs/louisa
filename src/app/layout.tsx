@@ -22,14 +22,14 @@ import { resolveLocale } from '@/lib/locale'
 
 export const dynamic = 'force-dynamic'
 
-/** Lavender light bg / Midnight dark — browser chrome tint */
+/** Louisa cream / slate browser chrome tint */
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover',
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#FAF8FF' },
-    { media: '(prefers-color-scheme: dark)', color: '#0F172A' },
+    { media: '(prefers-color-scheme: light)', color: '#FBF5EA' },
+    { media: '(prefers-color-scheme: dark)', color: '#17211F' },
   ],
 }
 
@@ -69,7 +69,7 @@ export async function generateMetadata(): Promise<Metadata> {
       description: company.description,
       icons: {
         icon: [
-          { url: '/favicon.svg', type: 'image/svg+xml' },
+          { url: '/icon.png', sizes: '512x512', type: 'image/png' },
           { url: '/favicon.png', sizes: '32x32', type: 'image/png' },
         ],
         apple: '/apple-touch-icon.png',
@@ -90,11 +90,12 @@ export async function generateMetadata(): Promise<Metadata> {
   } catch {
     return {
       ...(metadataBase ? { metadataBase } : {}),
-      title: 'Your Store',
-      description: 'Discover our collection.',
+      title: 'Louisa',
+      description:
+        'Practical essentials for hygiene, household cleaning, child nutrition and school-related outlays.',
       icons: {
         icon: [
-          { url: '/favicon.svg', type: 'image/svg+xml' },
+          { url: '/icon.png', sizes: '512x512', type: 'image/png' },
           { url: '/favicon.png', sizes: '32x32', type: 'image/png' },
         ],
         apple: '/apple-touch-icon.png',

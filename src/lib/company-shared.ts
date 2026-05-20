@@ -36,12 +36,13 @@ export interface Company {
  * Fallback brand shown when the backend Company record hasn't been provisioned
  * yet (e.g. before the first-login /admin/setup wizard has run). Each fork
  * should set these values to match the storefront's own identity so the fork
- * never shows a generic "Your Store" placeholder.
+ * never shows a generic fallback placeholder.
  */
 export const FALLBACK_COMPANY: Company = {
-  name: 'Your Store',
-  tagline: '',
-  description: 'Discover our collection.',
+  name: 'Louisa',
+  tagline: 'Home care, nutrition and school essentials',
+  description:
+    'Practical essentials for hygiene, household cleaning, child nutrition and school-related outlays.',
   logoUrl: null,
   heroImageUrl: null,
   ogImageUrl: null,

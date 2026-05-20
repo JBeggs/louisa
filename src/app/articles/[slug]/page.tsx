@@ -123,10 +123,10 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
       <section className="py-12 bg-white border-t border-gray-200">
         <div className="container-narrow text-center">
           <h2 className="text-2xl font-bold font-playfair text-text mb-4">
-            Discover Our Collection
+            Shop Practical Essentials
           </h2>
           <p className="text-text-muted mb-6">
-            Find unique vintage treasures and modern essentials in our shop.
+            Find hygiene, cleaning, nutrition and school supplies in our shop.
           </p>
           <Link href="/products" className="btn btn-primary">
             Shop Now

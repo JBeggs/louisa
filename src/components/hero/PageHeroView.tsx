@@ -36,7 +36,7 @@ export default function PageHeroView({
   const hasCta = Boolean(hero.ctaLabel && hero.ctaHref)
   const primaryLabel =
     primaryCtaLabel ||
-    (company?.name?.trim() ? `Shop ${company.name}` : 'Browse menu')
+    (company?.name?.trim() ? `Shop ${company.name}` : 'Shop essentials')
   const secLabel = secondaryCtaLabel ?? null
   const secHref = secondaryCtaHref ?? null
 

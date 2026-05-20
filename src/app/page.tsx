@@ -179,7 +179,7 @@ export default async function HomePage() {
 
   const primaryCtaLabel =
     coerceSiteString(primaryLabelRaw).trim() ||
-    (company.name.trim() ? `Shop ${company.name}` : 'Browse menu')
+    (company.name.trim() ? `Shop ${company.name}` : 'Shop essentials')
   const secondaryCtaLabel = coerceSiteString(secondaryLabelRaw).trim() || null
   const secondaryHref = coerceSiteString(secondaryHrefRaw).trim() || null
 
@@ -202,8 +202,10 @@ export default async function HomePage() {
           <div className="container-wide">
             <div className="section-header">
               <div>
-                <h2 className="section-title">Featured</h2>
-                <p className="text-text-muted mt-1">Highlighted menu items from your catalog</p>
+                <h2 className="section-title">Featured essentials</h2>
+                <p className="text-text-muted mt-1">
+                  Hygiene, nutrition and school picks from your catalog
+                </p>
               </div>
               <Link href="/products" className="btn btn-secondary">
                 View all
@@ -227,7 +229,7 @@ export default async function HomePage() {
             <div className="section-header">
               <div>
                 <h2 className="section-title">{shelf.name}</h2>
-                <p className="text-text-muted mt-1">Products in this category</p>
+                <p className="text-text-muted mt-1">Essentials in this category</p>
               </div>
               <Link href={categoryViewAllHref(shelf.slug)} className="btn btn-secondary">
                 <Package className="w-4 h-4 mr-2" />
@@ -247,10 +249,10 @@ export default async function HomePage() {
         <section className="py-16 bg-bg">
           <div className="container-wide text-center text-text-muted">
             <ShoppingBag className="w-16 h-16 mx-auto mb-4 opacity-30" />
-            <p className="font-medium text-text">No category shelves yet</p>
+            <p className="font-medium text-text">No essential shelves yet</p>
             <p className="text-sm mt-2 max-w-md mx-auto">
-              Add categories and active products in the admin — each category with at least one product appears here,
-              alphabetically.
+              Add hygiene, cleaning, nutrition and school categories in the admin. Each active category
+              with at least one product appears here alphabetically.
             </p>
             <Link href="/products" className="btn btn-primary mt-6 inline-flex">
               Browse all products

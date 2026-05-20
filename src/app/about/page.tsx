@@ -232,7 +232,7 @@ export default async function AboutPage() {
               From Our Collection
             </h2>
             <p className="text-text-muted mb-8 max-w-2xl">
-              A sample of the vintage treasures and modern finds we curate for our customers.
+              A sample of the hygiene, cleaning, nutrition and school essentials we curate for families.
             </p>
             <div className="product-grid">
               {sampleProducts.map((product: any) => (
@@ -290,10 +290,10 @@ export default async function AboutPage() {
       <section className="py-16 bg-modern-primary text-white">
         <div className="container-wide text-center">
           <h2 className="text-3xl font-bold font-playfair mb-4">
-            Ready to Explore?
+            Ready to Stock the Essentials?
           </h2>
           <p className="text-lg text-blue-100 mb-8 max-w-2xl mx-auto">
-            Discover our collection of vintage treasures and modern finds.
+            Find practical hygiene, cleaning, nutrition and school supplies in one place.
           </p>
           <Link href="/products" className="btn btn-gold text-lg px-8 py-3">
             Shop Now

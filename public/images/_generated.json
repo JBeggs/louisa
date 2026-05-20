@@ -1,26 +1,20 @@
 {
-  "note": "Vector sources are hand-authored SVG. Raster fallbacks were exported locally with ImageMagick from the SVG masters (not AI-generated).",
+  "note": "Louisa simplified app icon set. Code should reference only these three public icon files.",
   "exports": [
     {
       "path": "public/favicon.png",
-      "source": "public/favicon.svg",
-      "tool": "ImageMagick",
       "size": "32x32",
-      "date": "2026-05-08"
+      "date": "2026-05-20"
     },
     {
       "path": "public/icon.png",
-      "source": "public/icon.svg",
-      "tool": "ImageMagick",
       "size": "512x512",
-      "date": "2026-05-08"
+      "date": "2026-05-20"
     },
     {
       "path": "public/apple-touch-icon.png",
-      "source": "public/icon.svg",
-      "tool": "ImageMagick",
       "size": "180x180",
-      "date": "2026-05-08"
+      "date": "2026-05-20"
     }
   ]
 }

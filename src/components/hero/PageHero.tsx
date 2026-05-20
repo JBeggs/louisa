@@ -29,7 +29,7 @@ export default async function PageHero({
     ])
     const primaryCtaLabel =
       coerceSiteString(primaryRaw).trim() ||
-      (company.name.trim() ? `Shop ${company.name}` : 'Browse menu')
+      (company.name.trim() ? `Shop ${company.name}` : 'Shop essentials')
     const secondaryCtaLabel = coerceSiteString(secondaryLabelRaw).trim() || null
     const secondaryCtaHref = coerceSiteString(secondaryHrefRaw).trim() || null
     return (
