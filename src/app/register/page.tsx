@@ -6,7 +6,9 @@ import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
 import { useCart } from '@/contexts/CartContext'
 import { useToast } from '@/contexts/ToastContext'
-import { Mail, Lock, User, ArrowRight, Phone } from 'lucide-react'
+import { authApi } from '@/lib/api'
+import { useRegistrationEmailCheck } from '@/hooks/useRegistrationEmailCheck'
+import { Mail, Lock, User, ArrowRight, Phone, Link2 } from 'lucide-react'
 
 function countDigits(value: string) {
   return value.replace(/\D/g, '').length
@@ -20,13 +22,27 @@ export default function RegisterPage() {
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [submitError, setSubmitError] = useState('')
   const { signUp } = useAuth()
   const { syncCartAfterLogin } = useCart()
   const { showError, showSuccess } = useToast()
   const router = useRouter()
+  const { emailCheckStatus, checkEmail, resetEmailCheck, linkMode, alreadyLinked } =
+    useRegistrationEmailCheck(authApi.checkRegistrationEmail)
+
+  const handleEmailBlur = () => {
+    void checkEmail(email)
+  }
+
+  const handleEmailChange = (value: string) => {
+    setEmail(value)
+    resetEmailCheck()
+    setSubmitError('')
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setSubmitError('')
 
     if (password !== confirmPassword) {
       showError('Passwords do not match')
@@ -40,43 +56,65 @@ export default function RegisterPage() {
 
     const fn = firstName.trim()
     const ln = lastName.trim()
-    if (!fn) {
-      showError('Please enter your first name')
-      return
-    }
-    if (!ln) {
-      showError('Please enter your last name')
-      return
-    }
-
     const phoneTrim = phone.trim()
-    if (!phoneTrim) {
-      showError('Please enter your cellphone number')
-      return
-    }
-    if (countDigits(phoneTrim) < 8) {
-      showError('Cellphone must include at least 8 digits')
-      return
+
+    if (!linkMode) {
+      if (!fn) {
+        showError('Please enter your first name')
+        return
+      }
+      if (!ln) {
+        showError('Please enter your last name')
+        return
+      }
+      if (!phoneTrim) {
+        showError('Please enter your cellphone number')
+        return
+      }
+      if (countDigits(phoneTrim) < 8) {
+        showError('Cellphone must include at least 8 digits')
+        return
+      }
     }
 
     setIsLoading(true)
 
     try {
-      const { error, verificationRequired, email: verificationEmail } = await signUp(
+      const checkStatus = await checkEmail(email)
+      if (checkStatus === 'already_linked') {
+        const msg = 'This email is already linked to this store. Please sign in instead.'
+        setSubmitError(msg)
+        showError(msg)
+        return
+      }
+
+      const isLink = linkMode || checkStatus === 'existing_can_link'
+
+      const { error, verificationRequired, email: verificationEmail, accountLinked } = await signUp(
         email,
         password,
-        fn,
-        ln,
-        phoneTrim,
+        isLink ? '' : fn,
+        isLink ? '' : ln,
+        isLink ? '' : phoneTrim,
+        isLink ? { linkOnly: true } : undefined,
       )
 
       if (error) {
-        showError(error)
+        const msg =
+          typeof error === 'string' && error.trim() !== '' ? error : 'Registration failed. Please try again.'
+        setSubmitError(msg)
+        showError(msg)
       } else if (verificationRequired && verificationEmail) {
-        showSuccess('Check your email to verify your account before signing in.')
+        showSuccess(
+          accountLinked
+            ? 'Account linked to this store. Check your email to verify before signing in.'
+            : 'Check your email to verify your account before signing in.',
+        )
         router.push(`/auth/verify-email?email=${encodeURIComponent(verificationEmail.trim())}`)
       } else {
-        showSuccess('Account created! Syncing your cart...')
+        showSuccess(
+          accountLinked ? 'Account linked to this store! Syncing your cart...' : 'Account created! Syncing your cart...',
+        )
         try {
           await syncCartAfterLogin(true)
         } catch (cartErr: any) {
@@ -85,6 +123,7 @@ export default function RegisterPage() {
         router.push('/')
       }
     } catch {
+      setSubmitError('An unexpected error occurred')
       showError('An unexpected error occurred')
     } finally {
       setIsLoading(false)
@@ -101,11 +140,57 @@ export default function RegisterPage() {
                 <User className="w-10 h-10 text-[rgb(var(--color-on-dark-surface))]" />
               </div>
             </Link>
-            <h1 className="text-3xl font-bold font-playfair text-text tracking-tight">Create Account</h1>
-            <p className="text-text-muted mt-3 text-lg">Join our community of treasure hunters</p>
+            <h1 className="text-3xl font-bold font-playfair text-text tracking-tight">
+              {linkMode ? 'Link Your Account' : 'Create Account'}
+            </h1>
+            <p className="text-text-muted mt-3 text-lg">
+              {linkMode
+                ? 'Connect this store to your existing account'
+                : 'Join our community of treasure hunters'}
+            </p>
           </div>
 
+          {linkMode ? (
+            <div
+              role="status"
+              className="mb-6 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900"
+            >
+              <div className="flex items-start gap-2">
+                <Link2 className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                <p>
+                  An account with this email already exists. Enter your password to link this store
+                  to your existing account — we won&apos;t create a duplicate. Your profile details
+                  are already on file.
+                </p>
+              </div>
+            </div>
+          ) : null}
+
+          {alreadyLinked ? (
+            <div
+              role="status"
+              className="mb-6 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900"
+            >
+              This email is already linked to this store.{' '}
+              <Link href="/login" className="font-semibold underline underline-offset-2">
+                Sign in instead
+              </Link>
+              .
+            </div>
+          ) : null}
+
+          {submitError ? (
+            <div
+              role="alert"
+              className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
+            >
+              {submitError}
+            </div>
+          ) : null}
+
           <form onSubmit={handleSubmit} className="space-y-5">
+            {!linkMode ? (
+            <>
             <div className="space-y-2">
               <label htmlFor="register-first-name" className="form-label text-sm font-semibold uppercase tracking-wider text-text-light">
                 First name *
@@ -175,6 +260,8 @@ export default function RegisterPage() {
                 Required for delivery (at least 8 digits)
               </p>
             </div>
+            </>
+            ) : null}
 
             <div className="space-y-2">
               <label htmlFor="email" className="form-label text-sm font-semibold uppercase tracking-wider text-text-light">
@@ -189,12 +276,16 @@ export default function RegisterPage() {
                   data-cy="register-email"
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => handleEmailChange(e.target.value)}
+                  onBlur={handleEmailBlur}
                   className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-md hover:border-vintage-primary/50 transition-all focus:bg-white focus:ring-4 focus:ring-vintage-primary/10 focus:outline-none focus:border-transparent relative z-10"
                   placeholder="you@example.com"
                   required
                 />
               </div>
+              {emailCheckStatus === 'checking' ? (
+                <p className="text-xs text-text-muted ml-1">Checking email…</p>
+              ) : null}
             </div>
 
             <div className="space-y-2">
@@ -248,7 +339,7 @@ export default function RegisterPage() {
               <button
                 type="submit"
                 data-cy="register-submit"
-                disabled={isLoading}
+                disabled={isLoading || alreadyLinked}
                 className="btn btn-primary w-full py-4 text-base font-bold shadow-lg shadow-vintage-primary/20 hover:shadow-vintage-primary/30 active:scale-[0.98] transition-all disabled:opacity-70 disabled:scale-100"
               >
                 {isLoading ? (
@@ -257,11 +348,11 @@ export default function RegisterPage() {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    Creating account...
+                    {linkMode ? 'Linking account...' : 'Creating account...'}
                   </span>
                 ) : (
                   <>
-                    Create Account
+                    {linkMode ? 'Link Account' : 'Create Account'}
                     <ArrowRight className="w-5 h-5 ml-2" />
                   </>
                 )}

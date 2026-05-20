@@ -1,7 +1,7 @@
 'use client'
 
 import { createContext, useCallback, useContext, useEffect, useState } from 'react'
-import { authApi, apiClient, newsApi } from '@/lib/api'
+import { authApi, apiClient, newsApi, getApiErrorMessage } from '@/lib/api'
 
 interface User {
   id: string
@@ -51,7 +51,8 @@ interface AuthContextType {
     firstName: string,
     lastName: string,
     phone: string,
-  ) => Promise<{ error: string | null; verificationRequired?: boolean; email?: string }>
+    options?: { linkOnly?: boolean },
+  ) => Promise<{ error: string | null; verificationRequired?: boolean; email?: string; accountLinked?: boolean }>
   signOut: () => Promise<void>
   refreshProfile: () => Promise<void>
 }
@@ -287,27 +288,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  const signUp = async (email: string, password: string, firstName: string, lastName: string, phone: string) => {
+  const signUp = async (
+    email: string,
+    password: string,
+    firstName: string,
+    lastName: string,
+    phone: string,
+    options?: { linkOnly?: boolean },
+  ) => {
     setLoading(true)
     try {
-      const response = await authApi.register({
-        email,
-        password,
-        password_confirm: password,
-        first_name: firstName,
-        last_name: lastName,
-        phone,
-      })
+      const response = options?.linkOnly
+        ? await authApi.linkTenantAccount({ email, password })
+        : await authApi.register({
+            email,
+            password,
+            password_confirm: password,
+            first_name: firstName,
+            last_name: lastName,
+            phone,
+          })
 
       const needsVerify =
         'email_verification_required' in response &&
         Boolean((response as { email_verification_required?: boolean }).email_verification_required)
+      const accountLinked = Boolean(
+        (response as { account_linked?: boolean }).account_linked,
+      )
       if (needsVerify) {
         authApi.logout()
         setUser(null)
         setProfile(null)
         setCompanyId(null)
-        return { error: null, verificationRequired: true as const, email }
+        return { error: null, verificationRequired: true as const, email, accountLinked }
       }
 
       setUser(response.user)
@@ -315,41 +328,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       await fetchProfile()
 
-      return { error: null }
-    } catch (error: any) {
+      return { error: null, accountLinked }
+    } catch (error: unknown) {
       console.error('Registration error:', error)
-      
-      let errorMessage = 'Registration failed. Please try again.'
-      
-      if (error?.details?.error) {
-        const errorDetails = error.details.error
-        if (typeof errorDetails === 'string') {
-          errorMessage = errorDetails
-        } else if (typeof errorDetails === 'object' && errorDetails !== null) {
-          const fieldLabels: Record<string, string> = {
-            email: 'Email',
-            username: 'Username',
-            password: 'Password',
-            password_confirm: 'Password confirmation',
-            first_name: 'First name',
-            last_name: 'Last name',
-            full_name: 'Full name',
-            phone: 'Cellphone',
-          }
-          
-          const errorMessages = Object.entries(errorDetails).map(([field, messages]: [string, any]) => {
-            const fieldLabel = fieldLabels[field] || field.charAt(0).toUpperCase() + field.slice(1).replace(/_/g, ' ')
-            const messageArray = Array.isArray(messages) ? messages : [messages]
-            const messageText = messageArray.join(', ')
-            return `${fieldLabel}: ${messageText}`
-          })
-          errorMessage = errorMessages.join('. ')
-        }
-      } else if (error?.message) {
-        errorMessage = error.message
-      }
-      
-      return { error: errorMessage }
+      const fallback = 'Registration failed. Please try again.'
+      const msg = getApiErrorMessage(error, fallback).trim() || fallback
+      return { error: msg }
     } finally {
       setLoading(false)
     }
